@@ -1,7 +1,7 @@
 import "server-only";
-import fs from "node:fs";
-import path from "node:path";
 import crypto from "node:crypto";
+import { MongoServerError, type Collection } from "mongodb";
+import { getDb } from "./db";
 import {
   MAX_OPTIONS,
   MAX_OPTION_LENGTH,
@@ -12,50 +12,73 @@ export const VOTER_COOKIE = "voter_id";
 
 export type PollOption = { text: string; votes: number };
 
-type StoredPoll = {
+type PollDoc = {
+  _id: string;
+  question: string;
+  options: PollOption[];
+  allowMultiple: boolean;
+  createdAt: Date;
+  totalVoters: number;
+};
+
+type VoteDoc = {
+  pollId: string;
+  voterId: string;
+  choices: number[];
+  createdAt: Date;
+};
+
+export type Poll = {
   id: string;
   question: string;
   options: PollOption[];
   allowMultiple: boolean;
   createdAt: string;
-  voters: Record<string, number[]>;
-};
-
-export type Poll = Omit<StoredPoll, "voters"> & {
   totalVoters: number;
   myVote: number[] | null;
 };
 
 export class ValidationError extends Error {}
 
-const DATA_FILE = path.join(process.cwd(), "data", "polls.json");
+const DUPLICATE_KEY = 11000;
 
-function load(): Record<string, StoredPoll> {
-  if (!fs.existsSync(DATA_FILE)) return {};
-  return JSON.parse(fs.readFileSync(DATA_FILE, "utf8"));
+let indexesReady: Promise<unknown> | undefined;
+
+async function collections(): Promise<{
+  polls: Collection<PollDoc>;
+  votes: Collection<VoteDoc>;
+}> {
+  const db = await getDb();
+  const polls = db.collection<PollDoc>("polls");
+  const votes = db.collection<VoteDoc>("votes");
+  // One vote per voter per poll is enforced by the database, not just by the app.
+  indexesReady ??= votes
+    .createIndex({ pollId: 1, voterId: 1 }, { unique: true })
+    .catch((err) => {
+      indexesReady = undefined;
+      throw err;
+    });
+  await indexesReady;
+  return { polls, votes };
 }
 
-function save(polls: Record<string, StoredPoll>) {
-  fs.mkdirSync(path.dirname(DATA_FILE), { recursive: true });
-  const tmp = `${DATA_FILE}.tmp`;
-  fs.writeFileSync(tmp, JSON.stringify(polls, null, 2));
-  fs.renameSync(tmp, DATA_FILE);
-}
-
-function toPublic(poll: StoredPoll, voterId?: string): Poll {
-  const { voters, ...rest } = poll;
+function toPublic(poll: PollDoc, myVote: number[] | null): Poll {
   return {
-    ...rest,
-    totalVoters: Object.keys(voters).length,
-    myVote: (voterId && voters[voterId]) || null,
+    id: poll._id,
+    question: poll.question,
+    options: poll.options,
+    allowMultiple: poll.allowMultiple,
+    createdAt: poll.createdAt.toISOString(),
+    totalVoters: poll.totalVoters,
+    myVote,
   };
 }
 
-export function createPoll(input: {
+export async function createPoll(input: {
   question: string;
   options: string[];
   allowMultiple: boolean;
-}): Poll {
+}): Promise<Poll> {
   const question = input.question.trim();
   if (!question) throw new ValidationError("กรุณาใส่คำถาม");
   if (question.length > MAX_QUESTION_LENGTH) {
@@ -77,30 +100,36 @@ export function createPoll(input: {
     throw new ValidationError("มีตัวเลือกซ้ำกัน");
   }
 
-  const polls = load();
-  const id = crypto.randomBytes(5).toString("hex");
-  polls[id] = {
-    id,
+  const { polls } = await collections();
+  const poll: PollDoc = {
+    _id: crypto.randomBytes(5).toString("hex"),
     question,
     options: options.map((text) => ({ text, votes: 0 })),
     allowMultiple: input.allowMultiple,
-    createdAt: new Date().toISOString(),
-    voters: {},
+    createdAt: new Date(),
+    totalVoters: 0,
   };
-  save(polls);
-  return toPublic(polls[id]);
+  await polls.insertOne(poll);
+  return toPublic(poll, null);
 }
 
-export function getPoll(id: string, voterId?: string): Poll | null {
-  const poll = load()[id];
-  return poll ? toPublic(poll, voterId) : null;
+export async function getPoll(id: string, voterId?: string): Promise<Poll | null> {
+  const { polls, votes } = await collections();
+  const [poll, vote] = await Promise.all([
+    polls.findOne({ _id: id }),
+    voterId ? votes.findOne({ pollId: id, voterId }) : null,
+  ]);
+  return poll ? toPublic(poll, vote?.choices ?? null) : null;
 }
 
-export function votePoll(id: string, voterId: string, choices: number[]): Poll {
-  const polls = load();
-  const poll = polls[id];
+export async function votePoll(
+  id: string,
+  voterId: string,
+  choices: number[],
+): Promise<void> {
+  const { polls, votes } = await collections();
+  const poll = await polls.findOne({ _id: id });
   if (!poll) throw new ValidationError("ไม่พบโพลนี้");
-  if (poll.voters[voterId]) throw new ValidationError("คุณโหวตโพลนี้ไปแล้ว");
 
   const unique = [...new Set(choices)];
   if (unique.length === 0) throw new ValidationError("กรุณาเลือกอย่างน้อย 1 ข้อ");
@@ -115,10 +144,26 @@ export function votePoll(id: string, voterId: string, choices: number[]): Poll {
     throw new ValidationError("ตัวเลือกไม่ถูกต้อง");
   }
 
+  // Record the vote first: the unique index rejects a second vote atomically,
+  // even when two requests from the same voter race each other.
+  try {
+    await votes.insertOne({ pollId: id, voterId, choices: unique, createdAt: new Date() });
+  } catch (err) {
+    if (err instanceof MongoServerError && err.code === DUPLICATE_KEY) {
+      throw new ValidationError("คุณโหวตโพลนี้ไปแล้ว");
+    }
+    throw err;
+  }
+
+  const inc: Record<string, number> = { totalVoters: 1 };
   unique.forEach((c) => {
-    poll.options[c].votes += 1;
+    inc[`options.${c}.votes`] = 1;
   });
-  poll.voters[voterId] = unique;
-  save(polls);
-  return toPublic(poll, voterId);
+  try {
+    await polls.updateOne({ _id: id }, { $inc: inc });
+  } catch (err) {
+    // Undo the vote record so the voter can retry and the counts stay consistent.
+    await votes.deleteOne({ pollId: id, voterId });
+    throw err;
+  }
 }

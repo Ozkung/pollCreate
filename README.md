@@ -15,6 +15,12 @@
 
 ## เริ่มใช้งาน
 
+คัดลอก `.env.example` เป็น `.env.local` แล้วใส่ connection string ของ MongoDB
+
+```bash
+cp .env.example .env.local
+```
+
 ```bash
 npm install
 npm run dev
@@ -52,5 +58,13 @@ token ทั้งหมดอยู่ใน `src/app/globals.css` และส
 
 ## การเก็บข้อมูล
 
-ตอนนี้โพลจะถูกเก็บไว้ในไฟล์ `data/polls.json` บนเซิร์ฟเวอร์ ซึ่งเหมาะสำหรับการรันบนเครื่องหรือบนเซิร์ฟเวอร์เดียว
-ถ้าจะ deploy แบบ serverless (เช่น Vercel) ต้องเปลี่ยน `src/lib/polls.ts` ไปใช้ฐานข้อมูลจริง เช่น Postgres หรือ Redis
+ใช้ MongoDB (`src/lib/db.ts`, `src/lib/polls.ts`) โดยอ่านค่าจาก environment variables
+- `MONGODB_URI`: connection string
+- `MONGODB_DB`: ชื่อฐานข้อมูล (ค่าเริ่มต้นคือ `pollcreate`)
+
+collection ที่ใช้
+- `polls`: คำถาม ตัวเลือก และจำนวนโหวตของแต่ละข้อ
+- `votes`: ใครโหวตอะไร โดยมี unique index `{ pollId, voterId }` กันโหวตซ้ำในระดับฐานข้อมูล
+
+index จะถูกสร้างให้อัตโนมัติตอนใช้งานครั้งแรก
+ตอน deploy ให้ตั้ง `MONGODB_URI` ของ production ใน environment ของ host เช่น Vercel และอย่า commit ไฟล์ `.env.local`

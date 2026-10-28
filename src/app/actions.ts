@@ -19,7 +19,7 @@ export async function createPollAction(
 ): Promise<ActionState> {
   let id: string;
   try {
-    const poll = createPoll({
+    const poll = await createPoll({
       question: String(formData.get("question") ?? ""),
       options: formData.getAll("option").map(String),
       allowMultiple: formData.get("allowMultiple") === "on",
@@ -49,7 +49,7 @@ export async function voteAction(
   }
 
   try {
-    votePoll(pollId, voterId, formData.getAll("choice").map(Number));
+    await votePoll(pollId, voterId, formData.getAll("choice").map(Number));
   } catch (err) {
     if (err instanceof ValidationError) return { error: err.message };
     throw err;

@@ -23,7 +23,7 @@ export default function PollPage({ params }: PageProps<"/poll/[id]">) {
 async function PollContent({ params }: Pick<PageProps<"/poll/[id]">, "params">) {
   const { id } = await params;
   const voterId = (await cookies()).get(VOTER_COOKIE)?.value;
-  const poll = getPoll(id, voterId);
+  const poll = await getPoll(id, voterId);
   if (!poll) notFound();
 
   return (
