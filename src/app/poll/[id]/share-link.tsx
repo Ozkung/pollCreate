@@ -19,25 +19,22 @@ export function ShareLink() {
   };
 
   return (
-    <div className="flex flex-col gap-2">
-      <p className="font-bold">แชร์โพลนี้</p>
-      <div className="flex gap-2">
-        <input
-          readOnly
-          value={url}
-          onFocus={(e) => e.target.select()}
-          aria-label="ลิงก์โพล"
-          className="field min-w-0 flex-1"
-        />
-        <button
-          type="button"
-          onClick={copy}
-          disabled={!url}
-          className="btn shrink-0"
-        >
-          {copied ? "คัดลอกแล้ว" : "คัดลอกลิงก์"}
-        </button>
-      </div>
+    <div className="flex flex-col gap-3">
+      <input
+        readOnly
+        value={url}
+        onFocus={(e) => e.target.select()}
+        aria-label="ลิงก์โพล"
+        className="field text-sm"
+      />
+      <button
+        type="button"
+        onClick={copy}
+        disabled={!url}
+        className="btn btn-primary self-start"
+      >
+        {copied ? "คัดลอกแล้ว ✓" : "คัดลอกลิงก์"}
+      </button>
     </div>
   );
 }

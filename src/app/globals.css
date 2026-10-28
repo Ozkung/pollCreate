@@ -1,123 +1,180 @@
 @import "tailwindcss";
 
-/* Design tokens: "Tiagofragoso" design system — print-forward, monochrome, link blue. */
+/* Design tokens: "Groovy" neo-brutalist system — cream canvas, 2px ink
+   outlines, hard offset shadows, one vivid category colour per item. */
 :root {
-  --background: #f2f4f4;
-  --surface: #ebeded;
-  --surface-raised: #e2e4e4;
-  --foreground: #111111;
-  --muted: #606060;
-  --border: #000000;
-  --link: #0000ee;
-  --focus: #1a1a1a;
-  --invert-bg: rgba(20, 17, 12, 0.82);
-  --invert-fg: #ffffff;
-  --shadow-md:
-    rgba(35, 28, 15, 0.08) 0px 1px 0px 0px,
-    rgba(35, 28, 15, 0.16) 0px 6px 12px -6px,
-    rgba(35, 28, 15, 0.12) 0px 14px 22px -14px;
-}
+  --bg: #fff8ec;
+  --surface: #ffffff;
+  --ink: #111111;
+  --ink-muted: #5b5b5b;
+  --accent: #ff5c35;
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #090916;
-    --surface: #181824;
-    --surface-raised: #242430;
-    --foreground: #f5f5fe;
-    --muted: #9b9ba6;
-    --border: #30303b;
-    --link: #6969ff;
-    --focus: #4141ff;
-    --invert-bg: #f5f5fe;
-    --invert-fg: #090916;
-    /* Dark theme elevates with border + surface instead of shadow. */
-    --shadow-md: none;
-  }
+  --cat-yellow: #ffd23f;
+  --cat-pink: #ff8fab;
+  --cat-purple: #9b8cff;
+  --cat-green: #4dd4ac;
+  --cat-blue: #5cc8ff;
+  --cat-orange: #ff9f43;
+  --cat: var(--cat-yellow); /* set per element: style={{ "--cat": ... }} */
+
+  --radius-sm: 8px;
+  --radius-md: 14px;
+  --radius-lg: 22px;
+  --border: 2px solid var(--ink);
+  --shadow: 5px 5px 0 0 var(--ink);
+  --shadow-hover: 8px 8px 0 0 var(--ink);
+  --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
+  --color-bg: var(--bg);
   --color-surface: var(--surface);
-  --color-surface-raised: var(--surface-raised);
-  --color-muted: var(--muted);
-  --color-border: var(--border);
-  --color-link: var(--link);
-  --shadow-md: var(--shadow-md);
-  --font-serif:
-    "Times New Roman", Times, Georgia, var(--font-noto-serif-thai), serif;
+  --color-ink: var(--ink);
+  --color-ink-muted: var(--ink-muted);
+  --color-accent: var(--accent);
+  --color-cat: var(--cat);
+  --font-heading: var(--font-poppins), var(--font-prompt), system-ui, sans-serif;
+  --font-sans: var(--font-inter), var(--font-noto-sans-thai), system-ui, sans-serif;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: var(--font-serif);
-  font-size: 16px;
-  letter-spacing: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-size: 1.0625rem;
+  line-height: 1.7;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  font-family: var(--font-heading);
+  font-weight: 800;
+  line-height: 1.15;
+  letter-spacing: -0.01em;
 }
 
 :focus-visible {
-  outline: 1px solid var(--focus);
+  outline: 3px solid var(--accent);
   outline-offset: 2px;
 }
 
 @layer components {
-  .card {
-    border: 1px solid var(--border);
-    background: var(--background);
-    box-shadow: var(--shadow-md);
+  .box {
+    background: var(--surface);
+    border: var(--border);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow);
+  }
+  .box-lg {
+    border-radius: var(--radius-lg);
   }
 
-  /* Transparent with a hairline border; inverts and slides on hover. */
+  .lift {
+    transition:
+      box-shadow 180ms var(--ease),
+      transform 180ms var(--ease),
+      background-color 180ms var(--ease);
+  }
+  .lift:hover {
+    box-shadow: var(--shadow-hover);
+    transform: translate(-2px, -2px);
+  }
+
   .btn {
     display: inline-flex;
     align-items: center;
     justify-content: center;
     gap: 8px;
     min-height: 44px;
-    padding: 12px 16px;
-    border: 1px solid var(--border);
-    background: transparent;
-    color: var(--foreground);
-    font-weight: 400;
+    padding: 8px 24px;
+    border: var(--border);
+    border-radius: 999px;
+    background: var(--surface);
+    color: var(--ink);
+    font-family: var(--font-heading);
+    font-weight: 700;
+    box-shadow: var(--shadow);
     cursor: pointer;
     transition:
-      background-color 200ms ease-out,
-      color 200ms ease-out,
-      transform 200ms ease-out;
+      box-shadow 180ms var(--ease),
+      transform 180ms var(--ease);
   }
   .btn:hover:not(:disabled) {
-    background: var(--invert-bg);
-    color: var(--invert-fg);
-    transform: translateX(4px);
+    box-shadow: var(--shadow-hover);
+    transform: translate(-2px, -2px);
+  }
+  .btn:active:not(:disabled) {
+    box-shadow: 0 0 0 0 var(--ink);
+    transform: translate(5px, 5px);
   }
   .btn:disabled {
-    opacity: 0.5;
+    opacity: 0.6;
     cursor: default;
   }
-  .btn-strong {
-    font-weight: 700;
+  .btn-primary {
+    background: var(--accent);
+  }
+
+  .tag {
+    display: inline-flex;
+    align-items: center;
+    padding: 6px 14px;
+    border: var(--border);
+    border-radius: 999px;
+    background: var(--cat);
+    font-size: 0.8125rem;
+    font-weight: 600;
+    line-height: 1;
+  }
+
+  /* Numbered marker in a category-coloured square, as in "Featured Articles". */
+  .num {
+    display: inline-flex;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border: var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--cat);
+    font-family: var(--font-heading);
+    font-weight: 800;
+    font-size: 0.875rem;
+    line-height: 1;
   }
 
   .field {
     width: 100%;
     min-height: 44px;
-    padding: 8px 12px;
-    border: 1px solid var(--border);
-    background: transparent;
-    color: var(--foreground);
+    padding: 8px 16px;
+    border: var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--surface);
+    color: var(--ink);
   }
   .field::placeholder {
-    color: var(--muted);
+    color: var(--ink-muted);
   }
 
   .link {
-    color: var(--link);
+    font-weight: 600;
     text-decoration: underline;
-    text-underline-offset: 3px;
-    transition: opacity 200ms ease-out;
+    text-decoration-thickness: 2px;
+    text-underline-offset: 4px;
+    transition: color 180ms var(--ease);
   }
   .link:hover {
-    opacity: 0.6;
+    color: var(--accent);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lift:hover,
+  .btn:hover:not(:disabled),
+  .btn:active:not(:disabled) {
+    transform: none;
   }
 }

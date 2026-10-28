@@ -31,15 +31,15 @@ npm start
 
 ## Design
 
-ใช้ design system สไตล์ "Tiagofragoso" (editorial / print-forward)
-- ใช้ฟอนต์ Times New Roman ทั้งหมด ส่วนภาษาไทยใช้ Noto Serif Thai เป็น fallback
-- โทนขาวดำ มุมเหลี่ยม 0px และเส้นขอบดำ 1px
-- สีน้ำเงิน `#0000EE` ใช้กับลิงก์เท่านั้น
-- ปุ่มพื้นใส เมื่อ hover จะกลับสีและเลื่อนไปทางขวาเล็กน้อย
-- ไม่มีสีแดง/เขียวสำหรับสถานะ: ข้อความ error ใช้ตัวหนาและเส้นขอบซ้ายแทน
-- รองรับ light / dark ตามการตั้งค่าของระบบ
+ใช้ design system สไตล์ "Groovy" (playful neo-brutalist)
+- พื้นสีครีม การ์ดสีขาว เส้นขอบดำ 2px และเงาแข็งแบบ offset (5px → 8px เมื่อ hover)
+- หัวข้อใช้ Poppins / Prompt ส่วนเนื้อหาใช้ Inter / Noto Sans Thai (ฟอนต์ไทยเป็น fallback เพราะ Poppins/Inter ไม่มีตัวอักษรไทย)
+- ตัวเลือกแต่ละข้อมี "สีหมวด" ของตัวเอง (เหลือง ชมพู ม่วง เขียว ฟ้า ส้ม) ใช้ทั้งในฟอร์มและแถบผลโหวต
+- สีหลัก `#FF5C35` ใช้กับปุ่มหลัก ลิงก์ตอน hover และ focus ring
+- เลย์เอาต์ 2 คอลัมน์ (เนื้อหา + sidebar) ตั้งแต่ 1024px ขึ้นไป และมีรูปตกแต่งพื้นหลังเฉพาะจอใหญ่
+- รองรับ `prefers-reduced-motion`
 
-token ทั้งหมดอยู่ใน `src/app/globals.css`
+token ทั้งหมดอยู่ใน `src/app/globals.css` และสีหมวดอยู่ใน `src/lib/colors.ts`
 
 ## โครงสร้าง
 
