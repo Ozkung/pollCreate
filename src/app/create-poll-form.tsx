@@ -7,6 +7,7 @@ import {
   MAX_OPTION_LENGTH,
   MAX_QUESTION_LENGTH,
 } from "@/lib/limits";
+import { FormError } from "./form-error";
 
 const initialState: ActionState = { error: null };
 
@@ -26,23 +27,20 @@ export function CreatePollForm() {
     setOptions((opts) => opts.filter((o) => o.key !== key));
 
   return (
-    <form
-      action={formAction}
-      className="flex flex-col gap-5 rounded-2xl border border-border bg-card p-6 shadow-sm"
-    >
+    <form action={formAction} className="card flex flex-col gap-6 p-6">
       <label className="flex flex-col gap-2">
-        <span className="text-sm font-medium">คำถาม</span>
+        <span className="font-bold">คำถาม</span>
         <input
           name="question"
           required
           maxLength={MAX_QUESTION_LENGTH}
           placeholder="เช่น มื้อเที่ยงวันนี้กินอะไรดี?"
-          className="rounded-lg border border-border bg-background px-3 py-2 outline-none focus:border-accent"
+          className="field"
         />
       </label>
 
       <fieldset className="flex flex-col gap-2">
-        <legend className="mb-2 text-sm font-medium">ตัวเลือก</legend>
+        <legend className="mb-2 font-bold">ตัวเลือก</legend>
         {options.map((opt, i) => (
           <div key={opt.key} className="flex gap-2">
             <input
@@ -52,14 +50,14 @@ export function CreatePollForm() {
               required={i < 2}
               maxLength={MAX_OPTION_LENGTH}
               placeholder={`ตัวเลือกที่ ${i + 1}`}
-              className="flex-1 rounded-lg border border-border bg-background px-3 py-2 outline-none focus:border-accent"
+              className="field flex-1"
             />
             {options.length > 2 && (
               <button
                 type="button"
                 onClick={() => removeOption(opt.key)}
                 aria-label={`ลบตัวเลือกที่ ${i + 1}`}
-                className="rounded-lg px-3 text-muted hover:bg-accent-soft hover:text-danger"
+                className="btn w-11 shrink-0 px-0"
               >
                 ✕
               </button>
@@ -70,30 +68,26 @@ export function CreatePollForm() {
           <button
             type="button"
             onClick={() => setOptions((opts) => [...opts, newOption()])}
-            className="self-start rounded-lg px-2 py-1 text-sm font-medium text-accent hover:bg-accent-soft"
+            className="link self-start py-2"
           >
             + เพิ่มตัวเลือก
           </button>
         )}
       </fieldset>
 
-      <label className="flex items-center gap-2 text-sm">
-        <input type="checkbox" name="allowMultiple" className="accent-accent" />
+      <label className="flex items-center gap-2">
+        <input
+          type="checkbox"
+          name="allowMultiple"
+          className="size-4 accent-foreground"
+        />
         อนุญาตให้เลือกได้หลายข้อ
       </label>
 
-      {state.error && (
-        <p role="alert" className="text-sm text-danger">
-          {state.error}
-        </p>
-      )}
+      <FormError message={state.error} />
 
-      <button
-        type="submit"
-        disabled={pending}
-        className="rounded-lg bg-accent px-4 py-2.5 font-semibold text-white hover:opacity-90 disabled:opacity-60"
-      >
-        {pending ? "กำลังสร้าง..." : "สร้างโพล"}
+      <button type="submit" disabled={pending} className="btn btn-strong">
+        {pending ? "กำลังสร้าง…" : "สร้างโพล →"}
       </button>
     </form>
   );

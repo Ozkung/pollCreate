@@ -2,6 +2,7 @@
 
 import { useActionState } from "react";
 import { voteAction, type ActionState } from "@/app/actions";
+import { FormError } from "@/app/form-error";
 import type { Poll } from "@/lib/polls";
 
 const initialState: ActionState = { error: null };
@@ -18,31 +19,23 @@ export function VoteForm({ poll }: { poll: Poll }) {
       {poll.options.map((opt, i) => (
         <label
           key={i}
-          className="flex cursor-pointer items-center gap-3 rounded-lg border border-border px-4 py-3 hover:border-accent has-checked:border-accent has-checked:bg-accent-soft"
+          className="flex min-h-11 cursor-pointer items-center gap-3 border border-border px-4 py-3 transition-colors duration-200 ease-out hover:bg-surface has-checked:bg-surface-raised has-checked:font-bold"
         >
           <input
             type={inputType}
             name="choice"
             value={i}
             required={!poll.allowMultiple}
-            className="accent-accent"
+            className="size-4 accent-foreground"
           />
           <span>{opt.text}</span>
         </label>
       ))}
 
-      {state.error && (
-        <p role="alert" className="text-sm text-danger">
-          {state.error}
-        </p>
-      )}
+      <FormError message={state.error} />
 
-      <button
-        type="submit"
-        disabled={pending}
-        className="mt-2 rounded-lg bg-accent px-4 py-2.5 font-semibold text-white hover:opacity-90 disabled:opacity-60"
-      >
-        {pending ? "กำลังส่ง..." : "โหวต"}
+      <button type="submit" disabled={pending} className="btn btn-strong mt-3">
+        {pending ? "กำลังส่ง…" : "โหวต →"}
       </button>
     </form>
   );

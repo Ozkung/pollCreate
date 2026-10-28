@@ -29,6 +29,18 @@ npm run build
 npm start
 ```
 
+## Design
+
+ใช้ design system สไตล์ "Tiagofragoso" (editorial / print-forward)
+- ใช้ฟอนต์ Times New Roman ทั้งหมด ส่วนภาษาไทยใช้ Noto Serif Thai เป็น fallback
+- โทนขาวดำ มุมเหลี่ยม 0px และเส้นขอบดำ 1px
+- สีน้ำเงิน `#0000EE` ใช้กับลิงก์เท่านั้น
+- ปุ่มพื้นใส เมื่อ hover จะกลับสีและเลื่อนไปทางขวาเล็กน้อย
+- ไม่มีสีแดง/เขียวสำหรับสถานะ: ข้อความ error ใช้ตัวหนาและเส้นขอบซ้ายแทน
+- รองรับ light / dark ตามการตั้งค่าของระบบ
+
+token ทั้งหมดอยู่ใน `src/app/globals.css`
+
 ## โครงสร้าง
 
 | ไฟล์ | หน้าที่ |
