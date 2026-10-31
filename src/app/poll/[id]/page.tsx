@@ -9,8 +9,23 @@ import { VoteForm } from "./vote-form";
 import { Results } from "./results";
 import { ShareLink } from "./share-link";
 import { AutoRefresh } from "./auto-refresh";
+import { DonateBox } from "./donate-box";
+import { promptPayPayload } from "@/lib/promptpay";
 
 const dateFormat = new Intl.DateTimeFormat("th-TH", { dateStyle: "long" });
+
+/** PromptPay ID from env, or null when unset/invalid so the Donate box is hidden. */
+function donationConfig() {
+  const promptPayId = process.env.PROMPTPAY_ID?.trim();
+  if (!promptPayId) return null;
+  try {
+    promptPayPayload(promptPayId);
+  } catch {
+    console.error("PROMPTPAY_ID is not a valid PromptPay ID; Donate is disabled");
+    return null;
+  }
+  return { promptPayId, recipientName: process.env.PROMPTPAY_NAME?.trim() || undefined };
+}
 
 export default function PollPage({ params }: PageProps<"/poll/[id]">) {
   return (
@@ -25,6 +40,7 @@ async function PollContent({ params }: Pick<PageProps<"/poll/[id]">, "params">) 
   const voterId = (await cookies()).get(VOTER_COOKIE)?.value;
   const poll = await getPoll(id, voterId);
   if (!poll) notFound();
+  const donation = donationConfig();
 
   return (
     <div className="grid gap-8 lg:grid-cols-[minmax(0,2.1fr)_minmax(0,1fr)]">
@@ -41,6 +57,11 @@ async function PollContent({ params }: Pick<PageProps<"/poll/[id]">, "params">) 
             <>
               <Results poll={poll} />
               <AutoRefresh intervalMs={5000} />
+              {donation && (
+                <div className="mt-8 border-t-2 border-ink pt-6">
+                  <DonateBox {...donation} />
+                </div>
+              )}
             </>
           ) : (
             <VoteForm poll={poll} />
